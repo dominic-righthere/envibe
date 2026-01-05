@@ -1,6 +1,6 @@
 {
   "name": "envibe",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The missing permission layer between AI agents and your .env",
   "type": "module",
   "bin": {

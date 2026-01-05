@@ -87,31 +87,33 @@ export const CLASSIFICATION_PATTERNS: ClassificationPattern[] = [
     description: "Token",
   },
 
-  // Read-only (URLs and connection strings AI might need to understand)
+  // Placeholder (connection strings often contain passwords)
   {
     name: "database-url",
     pattern: /DATABASE[_-]?URL/i,
-    suggestedAccess: AccessLevel.READ_ONLY,
-    description: "Database connection URL",
+    suggestedAccess: AccessLevel.PLACEHOLDER,
+    description: "Database connection URL (may contain password)",
   },
   {
     name: "redis-url",
     pattern: /REDIS[_-]?URL/i,
-    suggestedAccess: AccessLevel.READ_ONLY,
-    description: "Redis connection URL",
+    suggestedAccess: AccessLevel.PLACEHOLDER,
+    description: "Redis connection URL (may contain password)",
   },
   {
     name: "mongodb-uri",
     pattern: /MONGO(DB)?[_-]?URI/i,
-    suggestedAccess: AccessLevel.READ_ONLY,
-    description: "MongoDB connection URI",
+    suggestedAccess: AccessLevel.PLACEHOLDER,
+    description: "MongoDB connection URI (may contain password)",
   },
   {
     name: "connection-string",
     pattern: /CONNECTION[_-]?STRING/i,
-    suggestedAccess: AccessLevel.READ_ONLY,
-    description: "Connection string",
+    suggestedAccess: AccessLevel.PLACEHOLDER,
+    description: "Connection string (may contain password)",
   },
+
+  // Read-only (URLs and endpoints without credentials)
   {
     name: "url-suffix",
     pattern: /_URL$/i,
