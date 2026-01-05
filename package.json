@@ -1,0 +1,50 @@
+{
+  "name": "aienv",
+  "version": "0.1.0",
+  "description": "Granular AI access control for environment variables",
+  "type": "module",
+  "bin": {
+    "aienv": "./dist/cli/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "bun build ./src/cli/index.ts --outdir ./dist/cli --target node && bun build ./src/index.ts --outdir ./dist --target node",
+    "dev": "bun run ./src/cli/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "env",
+    "environment",
+    "variables",
+    "secrets",
+    "ai",
+    "claude",
+    "mcp",
+    "security",
+    "access-control"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "commander": "^13.0.0",
+    "yaml": "^2.7.0"
+  }
+}

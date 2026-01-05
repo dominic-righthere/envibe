@@ -1,0 +1,65 @@
+# aienv manifest - AI access control for environment variables
+# See: https://github.com/your-repo/aienv
+#
+# Access levels:
+#   full        - AI can see and modify the value
+#   read-only   - AI can see but not modify
+#   placeholder - AI sees <VAR_NAME>, knows it exists
+#   schema-only - AI sees structure/format only
+#   hidden      - Completely hidden from AI
+#
+version: 1
+variables:
+  # Example: Non-sensitive configuration (AI can read/write)
+  NODE_ENV:
+    access: full
+    description: "Node.js environment mode (development, staging, production)"
+    default: "development"
+
+  DEBUG:
+    access: full
+    description: "Enable debug logging"
+    default: "false"
+
+  PORT:
+    access: full
+    description: "Server port number"
+    default: "3000"
+
+  # Example: Connection strings (AI can see for understanding, not modify)
+  DATABASE_URL:
+    access: read-only
+    description: "PostgreSQL connection string"
+    pattern: "postgres://user:***@host:5432/db"
+
+  REDIS_URL:
+    access: read-only
+    description: "Redis connection URL"
+
+  # Example: API keys (AI knows they exist, can reference in code)
+  OPENAI_API_KEY:
+    access: placeholder
+    description: "OpenAI API key for embeddings and completions"
+    required: true
+
+  GITHUB_TOKEN:
+    access: placeholder
+    description: "GitHub personal access token"
+
+  # Example: Highly sensitive (completely hidden from AI)
+  STRIPE_SECRET_KEY:
+    access: hidden
+    description: "Stripe secret key - payment processing"
+
+  JWT_SECRET:
+    access: hidden
+    description: "JWT signing secret"
+
+  # Example: Complex credentials (AI sees structure only)
+  AWS_CREDENTIALS:
+    access: schema-only
+    description: "AWS access credentials"
+    schema:
+      AWS_ACCESS_KEY_ID: "AKIA..."
+      AWS_SECRET_ACCESS_KEY: "<40-character-secret>"
+      AWS_REGION: "us-east-1"
