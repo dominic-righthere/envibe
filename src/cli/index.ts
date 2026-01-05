@@ -12,8 +12,8 @@ import { mcpCommand } from "./commands/mcp";
 const program = new Command();
 
 program
-  .name("aienv")
-  .description("Granular AI access control for environment variables")
+  .name("envibe")
+  .description("The missing permission layer between AI agents and your .env")
   .version("0.1.0");
 
 program.addCommand(setupCommand);

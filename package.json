@@ -1,10 +1,10 @@
 {
-  "name": "aienv",
+  "name": "envibe",
   "version": "0.1.0",
-  "description": "Granular AI access control for environment variables",
+  "description": "The missing permission layer between AI agents and your .env",
   "type": "module",
   "bin": {
-    "aienv": "./dist/cli/index.js"
+    "envibe": "./dist/cli/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

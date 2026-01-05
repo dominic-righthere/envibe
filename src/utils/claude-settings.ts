@@ -98,7 +98,7 @@ export interface ConfigureResult {
 }
 
 /**
- * Configure Claude Code settings with aienv permissions
+ * Configure Claude Code settings with envibe permissions
  * @param silent - If true, don't log to console (used by MCP server)
  */
 export async function configureClaudeSettings(silent = false): Promise<ConfigureResult> {
@@ -166,10 +166,10 @@ export async function configureClaudeSettings(silent = false): Promise<Configure
     settings.mcpServers = {};
   }
 
-  const mcpConfigured = "aienv" in settings.mcpServers;
-  settings.mcpServers.aienv = {
+  const mcpConfigured = "envibe" in settings.mcpServers;
+  settings.mcpServers.envibe = {
     command: "npx",
-    args: ["aienv", "mcp"],
+    args: ["envibe", "mcp"],
   };
 
   // Write settings

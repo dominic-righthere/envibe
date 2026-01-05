@@ -1,6 +1,6 @@
-# aienv
+# envibe
 
-[![npm version](https://img.shields.io/npm/v/aienv.svg)](https://www.npmjs.com/package/aienv)
+[![npm version](https://img.shields.io/npm/v/envibe.svg)](https://www.npmjs.com/package/envibe)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **The missing permission layer between AI agents and your .env**
@@ -15,7 +15,7 @@ It's all-or-nothing. Until now.
 
 ## The Solution
 
-`aienv` gives you **per-variable access control** with 5 levels:
+`envibe` gives you **per-variable access control** with 5 levels:
 
 | Level | AI Can See | AI Can Modify | Example |
 |-------|-----------|---------------|---------|
@@ -27,20 +27,20 @@ It's all-or-nothing. Until now.
 
 ## Quick Start
 
-Add aienv as an MCP server to your AI tool:
+Add envibe as an MCP server to your AI tool:
 
 ```json
 {
   "mcpServers": {
-    "aienv": {
+    "envibe": {
       "command": "npx",
-      "args": ["aienv-mcp"]
+      "args": ["envibe-mcp"]
     }
   }
 }
 ```
 
-On first use, aienv automatically:
+On first use, envibe automatically:
 1. Creates `.env.manifest.yaml` from your `.env.example`
 2. Generates `.env.ai` (filtered view for AI)
 3. Blocks direct `.env` file access
@@ -100,11 +100,11 @@ variables:
 
 | Command | Description |
 |---------|-------------|
-| `aienv setup` | Full setup (recommended) |
-| `aienv setup -i` | Interactive mode - choose access levels |
-| `aienv generate` | Regenerate `.env.ai` |
-| `aienv view` | Display variables with access levels |
-| `aienv mcp` | Start MCP server |
+| `envibe setup` | Full setup (recommended) |
+| `envibe setup -i` | Interactive mode - choose access levels |
+| `envibe generate` | Regenerate `.env.ai` |
+| `envibe view` | Display variables with access levels |
+| `envibe mcp` | Start MCP server |
 
 ## Installation
 
@@ -112,16 +112,16 @@ variables:
 <summary><b>Claude Code</b></summary>
 
 ```bash
-claude mcp add aienv npx aienv-mcp
+claude mcp add envibe npx envibe-mcp
 ```
 
 Or add to `.claude/settings.json`:
 ```json
 {
   "mcpServers": {
-    "aienv": {
+    "envibe": {
       "command": "npx",
-      "args": ["aienv-mcp"]
+      "args": ["envibe-mcp"]
     }
   }
 }
@@ -135,9 +135,9 @@ Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "aienv": {
+    "envibe": {
       "command": "npx",
-      "args": ["aienv-mcp"]
+      "args": ["envibe-mcp"]
     }
   }
 }
@@ -155,9 +155,9 @@ Add to your VS Code `settings.json`:
 ```json
 {
   "mcp.servers": {
-    "aienv": {
+    "envibe": {
       "command": "npx",
-      "args": ["aienv-mcp"]
+      "args": ["envibe-mcp"]
     }
   }
 }
@@ -171,9 +171,9 @@ Add to Cursor MCP settings:
 ```json
 {
   "mcpServers": {
-    "aienv": {
+    "envibe": {
       "command": "npx",
-      "args": ["aienv-mcp"]
+      "args": ["envibe-mcp"]
     }
   }
 }
@@ -187,9 +187,9 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 ```json
 {
   "mcpServers": {
-    "aienv": {
+    "envibe": {
       "command": "npx",
-      "args": ["aienv-mcp"]
+      "args": ["envibe-mcp"]
     }
   }
 }
@@ -201,10 +201,10 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ```bash
 # Install globally
-npm install -g aienv
+npm install -g envibe
 
 # Run setup
-aienv setup
+envibe setup
 ```
 </details>
 
@@ -217,14 +217,14 @@ aienv setup
 | `env_set` | Set a variable (only `full` access) |
 | `env_describe` | Get detailed info about a variable |
 
-## Why aienv?
+## Why envibe?
 
 | Approach | Problem |
 |----------|---------|
 | **dotenvx** | Encrypts files, but AI still needs the decryption key |
 | **permissions.deny** | Blocks all .env access—no granular control |
 | **Just ignore .env** | AI can't run or test code that needs env vars |
-| **aienv** | Per-variable access control. AI sees what you allow. |
+| **envibe** | Per-variable access control. AI sees what you allow. |
 
 ## File Structure
 
