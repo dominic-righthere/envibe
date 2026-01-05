@@ -186,7 +186,7 @@ export async function startMCPServer(): Promise<void> {
         {
           name: "env_describe",
           description:
-            "Get detailed information about a variable including its access level and description.",
+            "Get detailed information about a variable including its access level, description, format, and example.",
           inputSchema: {
             type: "object" as const,
             properties: {
@@ -196,6 +196,15 @@ export async function startMCPServer(): Promise<void> {
               },
             },
             required: ["key"],
+          },
+        },
+        {
+          name: "env_check_required",
+          description:
+            "Check which required environment variables are missing. Use this to help users set up their environment.",
+          inputSchema: {
+            type: "object" as const,
+            properties: {},
           },
         },
       ],
@@ -233,17 +242,60 @@ export async function startMCPServer(): Promise<void> {
 
         case "env_get": {
           const key = (args as { key: string }).key;
+          const config = manifest.variables[key];
           const variable = getVariableForAI(key, env, manifest);
+
+          // Handle hidden variables with helpful message
+          if (config && config.access === AccessLevel.HIDDEN) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: JSON.stringify({
+                    error: "ACCESS_DENIED",
+                    key,
+                    access: "hidden",
+                    message: "This variable is hidden from AI. Ask the user to configure it manually.",
+                    hint: config.description,
+                  }, null, 2),
+                },
+              ],
+              isError: true,
+            };
+          }
 
           if (!variable) {
             return {
               content: [
                 {
                   type: "text" as const,
-                  text: `Error: Variable "${key}" is hidden or does not exist`,
+                  text: JSON.stringify({
+                    error: "NOT_FOUND",
+                    key,
+                    message: `Variable "${key}" does not exist in the manifest.`,
+                  }, null, 2),
                 },
               ],
               isError: true,
+            };
+          }
+
+          // For placeholder variables, return helpful context
+          if (variable.access === AccessLevel.PLACEHOLDER) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: JSON.stringify({
+                    value: variable.displayValue,
+                    access: "placeholder",
+                    message: "You can reference this variable but cannot see the actual value.",
+                    hint: config?.description,
+                    format: config?.format,
+                    example: config?.example,
+                  }, null, 2),
+                },
+              ],
             };
           }
 
@@ -296,12 +348,37 @@ export async function startMCPServer(): Promise<void> {
           const variable = getVariableForAI(key, env, manifest);
           const config = manifest.variables[key];
 
-          if (!variable) {
+          // Even for hidden variables, provide helpful info
+          if (config && config.access === AccessLevel.HIDDEN) {
             return {
               content: [
                 {
                   type: "text" as const,
-                  text: `Error: Variable "${key}" is hidden or does not exist`,
+                  text: JSON.stringify({
+                    key,
+                    access: "hidden",
+                    canModify: false,
+                    description: config.description,
+                    message: "This variable is hidden from AI. Ask the user to configure it.",
+                    required: config.required ?? false,
+                    format: config.format,
+                    example: config.example,
+                  }, null, 2),
+                },
+              ],
+            };
+          }
+
+          if (!variable && !config) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: JSON.stringify({
+                    error: "NOT_FOUND",
+                    key,
+                    message: `Variable "${key}" does not exist in the manifest.`,
+                  }, null, 2),
                 },
               ],
               isError: true,
@@ -309,13 +386,15 @@ export async function startMCPServer(): Promise<void> {
           }
 
           const info = {
-            key: variable.key,
-            access: variable.access,
-            canModify: variable.canModify,
-            description: variable.description,
+            key: variable?.key ?? key,
+            access: variable?.access ?? config?.access,
+            canModify: variable?.canModify ?? false,
+            description: variable?.description ?? config?.description,
             required: config?.required ?? false,
             hasDefault: config?.default !== undefined,
             isSet: env[key] !== undefined,
+            format: config?.format,
+            example: config?.example,
           };
 
           return {
@@ -323,6 +402,49 @@ export async function startMCPServer(): Promise<void> {
               {
                 type: "text" as const,
                 text: JSON.stringify(info, null, 2),
+              },
+            ],
+          };
+        }
+
+        case "env_check_required": {
+          const missing: Array<{ key: string; description?: string; format?: string; example?: string }> = [];
+          const set: Array<{ key: string; value: string }> = [];
+
+          for (const [key, config] of Object.entries(manifest.variables)) {
+            if (config.required) {
+              if (env[key] === undefined || env[key] === "") {
+                missing.push({
+                  key,
+                  description: config.description,
+                  format: config.format,
+                  example: config.example,
+                });
+              } else {
+                // Only show value for non-sensitive vars
+                const variable = getVariableForAI(key, env, manifest);
+                if (variable && (variable.access === AccessLevel.FULL || variable.access === AccessLevel.READ_ONLY)) {
+                  set.push({ key, value: variable.displayValue });
+                } else {
+                  set.push({ key, value: "<set>" });
+                }
+              }
+            }
+          }
+
+          const result = {
+            missing,
+            set,
+            message: missing.length > 0
+              ? `${missing.length} required variable(s) are not set. Ask the user to configure them.`
+              : "All required variables are set.",
+          };
+
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify(result, null, 2),
               },
             ],
           };

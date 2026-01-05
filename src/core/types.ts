@@ -31,6 +31,10 @@ export interface VariableConfig {
   pattern?: string;
   /** Schema structure for schema-only access level */
   schema?: Record<string, string>;
+  /** Expected format type (url, key, number, boolean, email, etc.) */
+  format?: string;
+  /** Example value to help AI understand the expected format */
+  example?: string;
 }
 
 /**
@@ -93,4 +97,8 @@ export interface ClassificationPattern {
   suggestedAccess: AccessLevel;
   /** Description for the variable */
   description?: string;
+  /** Expected format type (url, key, number, boolean, email, etc.) */
+  format?: string;
+  /** Example value to help AI understand the expected format */
+  example?: string;
 }

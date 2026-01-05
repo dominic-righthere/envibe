@@ -215,7 +215,14 @@ envibe setup
 | `env_list` | List visible variables with access levels |
 | `env_get` | Get a variable's value (respects permissions) |
 | `env_set` | Set a variable (only `full` access) |
-| `env_describe` | Get detailed info about a variable |
+| `env_describe` | Get detailed info including format and example |
+| `env_check_required` | Check which required variables are missing |
+
+### v0.2.0 Features
+
+- **Better error messages** - When access is denied, get helpful guidance
+- **Format hints** - Know what format a variable should be (url, key, number, etc.)
+- **Required var checking** - Use `env_check_required` to guide users through setup
 
 ## Why envibe?
 
