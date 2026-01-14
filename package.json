@@ -4,7 +4,7 @@
   "description": "The missing permission layer between AI agents and your .env",
   "type": "module",
   "bin": {
-    "envibe": "./dist/cli/index.js"
+    "envibe": "dist/cli/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
