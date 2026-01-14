@@ -7,6 +7,7 @@ import {
 } from "../../core";
 import { classifyVariables } from "../../core/patterns";
 import { loadEnvFile, getEnvFilename } from "../../utils/dotenv";
+import { createFile } from "../../utils/file";
 
 export const initCommand = new Command("init")
   .description("Initialize .env.manifest.yaml from existing .env file")
@@ -14,7 +15,7 @@ export const initCommand = new Command("init")
   .option("-e, --env <path>", "Path to .env file", ".env")
   .action(async (options) => {
     const manifestPath = getManifestFilename();
-    const manifestFile = Bun.file(manifestPath);
+    const manifestFile = createFile(manifestPath);
 
     // Check if manifest already exists
     if ((await manifestFile.exists()) && !options.force) {
@@ -78,6 +79,6 @@ export const initCommand = new Command("init")
     console.log(`\nCreated ${manifestPath}`);
     console.log("\nNext steps:");
     console.log(`  1. Review and adjust access levels in ${manifestPath}`);
-    console.log("  2. Run: aienv generate");
-    console.log("  3. Run: aienv setup (to configure Claude Code)");
+    console.log("  2. Run: envibe generate");
+    console.log("  3. Run: envibe setup (to configure Claude Code)");
   });

@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { loadManifest, filterForAI, generateAIEnvContent } from "../../core";
 import { loadEnvFile, getAIEnvFilename } from "../../utils/dotenv";
+import { write } from "../../utils/file";
 
 export const generateCommand = new Command("generate")
   .description("Generate AI-safe .env.ai file")
@@ -19,7 +20,7 @@ export const generateCommand = new Command("generate")
         return;
       }
 
-      await Bun.write(options.output, content);
+      await write(options.output, content);
       console.log(`Generated ${options.output} with ${filtered.length} variables`);
 
       const counts: Record<string, number> = {};
@@ -33,7 +34,7 @@ export const generateCommand = new Command("generate")
       }
     } catch (error) {
       if (error instanceof Error && error.message.includes("not found")) {
-        console.error("Error: No manifest found. Run 'aienv init' first.");
+        console.error("Error: No manifest found. Run 'envibe init' first.");
         process.exit(1);
       }
       throw error;

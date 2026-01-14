@@ -25,6 +25,7 @@ import {
   envFileExists,
 } from "../utils/dotenv";
 import { configureClaudeSettings } from "../utils/claude-settings";
+import { createFile, write } from "../utils/file";
 
 // .env.example patterns to look for (in order of preference)
 const EXAMPLE_FILES = [
@@ -64,7 +65,7 @@ const FALLBACK_MANIFEST: Manifest = {
  * Auto-setup: create manifest and .env.ai if they don't exist
  */
 async function ensureSetup(): Promise<Manifest> {
-  const manifestFile = Bun.file(getManifestFilename());
+  const manifestFile = createFile(getManifestFilename());
 
   if (await manifestFile.exists()) {
     return loadManifest();
@@ -111,7 +112,7 @@ async function ensureSetup(): Promise<Manifest> {
 
   const filtered = filterForAI(env, manifest);
   const content = generateAIEnvContent(filtered);
-  await Bun.write(getAIEnvFilename(), content);
+  await write(getAIEnvFilename(), content);
 
   // Auto-configure Claude Code settings (silent mode - no console output)
   await configureClaudeSettings(true);
@@ -125,8 +126,8 @@ async function ensureSetup(): Promise<Manifest> {
 export async function startMCPServer(): Promise<void> {
   const server = new Server(
     {
-      name: "aienv",
-      version: "0.1.0",
+      name: "envibe",
+      version: "0.2.2",
     },
     {
       capabilities: {
@@ -331,7 +332,7 @@ export async function startMCPServer(): Promise<void> {
           const { variables: updatedEnv } = await loadEnvFile();
           const filtered = filterForAI(updatedEnv, manifest);
           const content = generateAIEnvContent(filtered);
-          await Bun.write(getAIEnvFilename(), content);
+          await write(getAIEnvFilename(), content);
 
           return {
             content: [
@@ -505,7 +506,7 @@ export async function startMCPServer(): Promise<void> {
         case "env://manifest": {
           // Auto-setup if needed
           await ensureSetup();
-          const manifestFile = Bun.file(getManifestFilename());
+          const manifestFile = createFile(getManifestFilename());
           const content = await manifestFile.text();
           return {
             contents: [

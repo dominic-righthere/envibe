@@ -2,6 +2,8 @@
  * Claude Code settings configuration utilities
  * Shared between CLI setup command and MCP server auto-setup
  */
+import { createFile, write } from "./file";
+import { readdir, mkdir } from "node:fs/promises";
 
 const CLAUDE_DIR = ".claude";
 const CLAUDE_SETTINGS_FILE = ".claude/settings.json";
@@ -61,15 +63,20 @@ interface ClaudeSettings {
  * Returns files that should be denied (excludes safe files)
  */
 export async function discoverEnvFiles(): Promise<string[]> {
-  const glob = new Bun.Glob(".env*");
   const files: string[] = [];
 
-  // dot: true is required to find dotfiles like .env
-  for await (const file of glob.scan({ cwd: ".", onlyFiles: true, dot: true })) {
-    // Skip safe files that AI should be able to read
-    if (!SAFE_ENV_FILES.includes(file)) {
-      files.push(file);
+  try {
+    const entries = await readdir(".", { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.startsWith(".env")) {
+        // Skip safe files that AI should be able to read
+        if (!SAFE_ENV_FILES.includes(entry.name)) {
+          files.push(entry.name);
+        }
+      }
     }
+  } catch {
+    // Directory read failed, return empty
   }
 
   return files;
@@ -104,13 +111,13 @@ export interface ConfigureResult {
 export async function configureClaudeSettings(silent = false): Promise<ConfigureResult> {
   // Ensure .claude directory exists
   try {
-    await Bun.$`mkdir -p ${CLAUDE_DIR}`.quiet();
+    await mkdir(CLAUDE_DIR, { recursive: true });
   } catch {
     // Directory might already exist
   }
 
   // Load existing settings or create new
-  const settingsFile = Bun.file(CLAUDE_SETTINGS_FILE);
+  const settingsFile = createFile(CLAUDE_SETTINGS_FILE);
   let settings: ClaudeSettings = {};
 
   if (await settingsFile.exists()) {
@@ -173,7 +180,7 @@ export async function configureClaudeSettings(silent = false): Promise<Configure
   };
 
   // Write settings
-  await Bun.write(CLAUDE_SETTINGS_FILE, JSON.stringify(settings, null, 2) + "\n");
+  await write(CLAUDE_SETTINGS_FILE, JSON.stringify(settings, null, 2) + "\n");
 
   // Report what was done (if not silent)
   if (!silent) {

@@ -1,5 +1,6 @@
 import * as YAML from "yaml";
 import { AccessLevel, type Manifest, type VariableConfig } from "./types";
+import { createFile, write } from "../utils/file";
 
 const MANIFEST_VERSION = 1;
 const MANIFEST_FILENAME = ".env.manifest.yaml";
@@ -76,7 +77,7 @@ export function serializeManifest(manifest: Manifest): string {
   });
 
   // Add helpful comments
-  const header = `# aienv manifest - AI access control for environment variables
+  const header = `# envibe manifest - AI access control for environment variables
 # Access levels:
 #   full        - AI can see and modify the value
 #   read-only   - AI can see but not modify
@@ -145,7 +146,7 @@ export function getManifestFilename(): string {
  */
 export async function loadManifest(directory: string = "."): Promise<Manifest> {
   const path = `${directory}/${MANIFEST_FILENAME}`;
-  const file = Bun.file(path);
+  const file = createFile(path);
 
   if (!(await file.exists())) {
     throw new Error(`Manifest not found: ${path}`);
@@ -164,5 +165,5 @@ export async function saveManifest(
 ): Promise<void> {
   const path = `${directory}/${MANIFEST_FILENAME}`;
   const content = serializeManifest(manifest);
-  await Bun.write(path, content);
+  await write(path, content);
 }

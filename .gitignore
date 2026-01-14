@@ -36,3 +36,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
+# envibe - environment files with secrets
+.env.staging
+.env.*.local
+.env.secrets
+.env.keys
+
+# envibe - generated AI-safe view (regenerated)

@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { loadManifest, validateModification, filterForAI, generateAIEnvContent } from "../../core";
 import { updateEnvVariable, loadEnvFile, getAIEnvFilename } from "../../utils/dotenv";
+import { write } from "../../utils/file";
 
 export const setCommand = new Command("set")
   .description("Set an environment variable (respects access permissions)")
@@ -46,12 +47,12 @@ export const setCommand = new Command("set")
         const { variables: env } = await loadEnvFile(options.env);
         const filtered = filterForAI(env, manifest);
         const content = generateAIEnvContent(filtered);
-        await Bun.write(getAIEnvFilename(), content);
+        await write(getAIEnvFilename(), content);
         console.log(`Updated ${getAIEnvFilename()}`);
       }
     } catch (error) {
       if (error instanceof Error && error.message.includes("not found")) {
-        console.error("Error: No manifest found. Run 'aienv init' first.");
+        console.error("Error: No manifest found. Run 'envibe init' first.");
         process.exit(1);
       }
       throw error;

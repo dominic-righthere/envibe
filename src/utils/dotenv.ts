@@ -1,4 +1,5 @@
 import type { ParsedEnv } from "../core/types";
+import { createFile, write } from "./file";
 
 const ENV_FILENAME = ".env";
 const ENV_AI_FILENAME = ".env.ai";
@@ -99,7 +100,7 @@ export function serializeEnv(env: Record<string, string>): string {
 export async function loadEnvFile(
   path: string = ENV_FILENAME
 ): Promise<ParsedEnv> {
-  const file = Bun.file(path);
+  const file = createFile(path);
 
   if (!(await file.exists())) {
     return { variables: {}, raw: "" };
@@ -119,7 +120,7 @@ export async function saveEnvFile(
   path: string = ENV_FILENAME
 ): Promise<void> {
   const content = serializeEnv(env);
-  await Bun.write(path, content);
+  await write(path, content);
 }
 
 /**
@@ -131,7 +132,7 @@ export async function updateEnvVariable(
   value: string,
   path: string = ENV_FILENAME
 ): Promise<void> {
-  const file = Bun.file(path);
+  const file = createFile(path);
   let content = "";
 
   if (await file.exists()) {
@@ -175,7 +176,7 @@ export async function updateEnvVariable(
     }
   }
 
-  await Bun.write(path, lines.join("\n"));
+  await write(path, lines.join("\n"));
 }
 
 /**
@@ -203,7 +204,7 @@ function escapeRegex(str: string): string {
  * Check if a .env file exists
  */
 export async function envFileExists(path: string = ENV_FILENAME): Promise<boolean> {
-  const file = Bun.file(path);
+  const file = createFile(path);
   return file.exists();
 }
 

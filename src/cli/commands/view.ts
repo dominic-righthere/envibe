@@ -70,7 +70,7 @@ export const viewCommand = new Command("view")
       }
     } catch (error) {
       if (error instanceof Error && error.message.includes("not found")) {
-        console.error("Error: No manifest found. Run 'aienv init' first.");
+        console.error("Error: No manifest found. Run 'envibe init' first.");
         process.exit(1);
       }
       throw error;

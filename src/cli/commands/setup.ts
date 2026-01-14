@@ -14,6 +14,7 @@ import {
 import { classifyVariables } from "../../core/patterns";
 import { loadEnvFile, getAIEnvFilename, envFileExists } from "../../utils/dotenv";
 import { configureClaudeSettings } from "../../utils/claude-settings";
+import { createFile, write } from "../../utils/file";
 
 const CLAUDE_SETTINGS_FILE = ".claude/settings.json";
 const GITIGNORE_FILE = ".gitignore";
@@ -29,7 +30,7 @@ const EXAMPLE_FILES = [
 
 // Patterns to add to .gitignore
 const GITIGNORE_PATTERNS = [
-  "# aienv - environment files with secrets",
+  "# envibe - environment files with secrets",
   ".env",
   ".env.local",
   ".env.development",
@@ -39,7 +40,7 @@ const GITIGNORE_PATTERNS = [
   ".env.secrets",
   ".env.keys",
   "",
-  "# aienv - generated AI-safe view (regenerated)",
+  "# envibe - generated AI-safe view (regenerated)",
   ".env.ai",
 ];
 
@@ -161,11 +162,11 @@ export const setupCommand = new Command("setup")
   .option("--skip-claude", "Skip Claude Code settings configuration")
   .option("--skip-gitignore", "Skip .gitignore configuration")
   .action(async (options) => {
-    console.log("Setting up aienv...\n");
+    console.log("Setting up envibe...\n");
 
     // Step 1: Init manifest if needed
     const manifestPath = getManifestFilename();
-    const manifestFile = Bun.file(manifestPath);
+    const manifestFile = createFile(manifestPath);
     let manifest: Manifest;
     let sourceFile: string | null = null;
 
@@ -223,7 +224,7 @@ export const setupCommand = new Command("setup")
     }
     const filtered = filterForAI(env, manifest);
     const content = generateAIEnvContent(filtered);
-    await Bun.write(getAIEnvFilename(), content);
+    await write(getAIEnvFilename(), content);
     console.log(`     Generated with ${filtered.length} AI-visible variables`);
 
     // Step 3: Configure .gitignore
@@ -245,12 +246,12 @@ export const setupCommand = new Command("setup")
     console.log("\nSetup complete! Next steps:");
     console.log("  1. Review .env.manifest.yaml and adjust access levels");
     console.log("  2. Create .env with your actual secrets (it's gitignored)");
-    console.log("  3. Run 'aienv generate' to update .env.ai");
+    console.log("  3. Run 'envibe generate' to update .env.ai");
     console.log("  4. AI will read .env.ai and use MCP tools (secrets protected)");
   });
 
 async function configureGitignore(): Promise<void> {
-  const gitignoreFile = Bun.file(GITIGNORE_FILE);
+  const gitignoreFile = createFile(GITIGNORE_FILE);
   let content = "";
 
   if (await gitignoreFile.exists()) {
@@ -284,7 +285,7 @@ async function configureGitignore(): Promise<void> {
   // Add to gitignore
   const addition = "\n" + linesToAdd.join("\n") + "\n";
   const newContent = content.trimEnd() + addition;
-  await Bun.write(GITIGNORE_FILE, newContent);
+  await write(GITIGNORE_FILE, newContent);
   console.log(`     Added ${newPatterns.length} patterns`);
 }
 

@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Write(./.env)",
+      "Write(./.env.*)",
+      "Bash(cat .env:*)",
+      "Bash(cat ./.env:*)",
+      "Bash(head .env:*)",
+      "Bash(head ./.env:*)",
+      "Bash(tail .env:*)",
+      "Bash(tail ./.env:*)",
+      "Bash(less .env:*)",
+      "Bash(less ./.env:*)",
+      "Bash(more .env:*)",
+      "Bash(more ./.env:*)",
+      "Bash(grep .env:*)",
+      "Bash(grep ./.env:*)"
+    ],
+    "allow": [
+      "Read(./.env.ai)",
+      "Read(./.env.manifest.yaml)",
+      "Read(./.env.example)"
+    ]
+  },
+  "mcpServers": {
+    "envibe": {
+      "command": "npx",
+      "args": [
+        "envibe",
+        "mcp"
+      ]
+    }
+  }
+}
