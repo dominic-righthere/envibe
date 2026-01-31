@@ -60,6 +60,8 @@ export function parseManifest(content: string): Manifest {
         required: config.required as boolean | undefined,
         pattern: config.pattern as string | undefined,
         schema: config.schema as Record<string, string> | undefined,
+        format: config.format as string | undefined,
+        example: config.example as string | undefined,
       };
     }
   }

@@ -127,13 +127,24 @@ export async function startMCPServer(): Promise<void> {
   const server = new Server(
     {
       name: "envibe",
-      version: "0.2.2",
+      version: "0.2.7",
     },
     {
       capabilities: {
         tools: {},
         resources: {},
       },
+      instructions: `envibe provides secure access to environment variables with granular permissions.
+
+Use these tools when working with .env files or environment configuration:
+- env_list: See all available variables and their access levels
+- env_get: Read a specific variable's value (respects access permissions)
+- env_set: Modify variables with 'full' access level
+- env_blind_set: Set a variable without reading it (use when user provides value for hidden/placeholder vars)
+- env_describe: Get metadata about a variable (format, required, etc.)
+- env_check_required: Find missing required variables
+
+Access levels: full (read/write), read-only, placeholder (name only), hidden (blocked).`,
     }
   );
 
@@ -206,6 +217,25 @@ export async function startMCPServer(): Promise<void> {
           inputSchema: {
             type: "object" as const,
             properties: {},
+          },
+        },
+        {
+          name: "env_blind_set",
+          description:
+            "Set an environment variable without reading its current value. Use this when the user provides a new value for a hidden or placeholder variable.",
+          inputSchema: {
+            type: "object" as const,
+            properties: {
+              key: {
+                type: "string",
+                description: "The environment variable name",
+              },
+              value: {
+                type: "string",
+                description: "The new value (provided by the user)",
+              },
+            },
+            required: ["key", "value"],
           },
         },
       ],
@@ -446,6 +476,70 @@ export async function startMCPServer(): Promise<void> {
               {
                 type: "text" as const,
                 text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        }
+
+        case "env_blind_set": {
+          const { key, value } = args as { key: string; value: string };
+          const config = manifest.variables[key];
+
+          // Must exist in manifest
+          if (!config) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: JSON.stringify({
+                    error: "NOT_IN_MANIFEST",
+                    key,
+                    message: `Variable "${key}" is not defined in the manifest. Add it first.`,
+                  }, null, 2),
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          // Only allow blind_set for writable access levels
+          const writableViaBlindSet = [AccessLevel.FULL, AccessLevel.PLACEHOLDER, AccessLevel.HIDDEN];
+          if (!writableViaBlindSet.includes(config.access)) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: JSON.stringify({
+                    error: "ACCESS_DENIED",
+                    key,
+                    access: config.access,
+                    message: `Variable "${key}" has access level "${config.access}" and cannot be modified.`,
+                  }, null, 2),
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          // Update .env file
+          await updateEnvVariable(key, value);
+
+          // Sync .env.ai (value will be filtered per access level)
+          const { variables: updatedEnv } = await loadEnvFile();
+          const filtered = filterForAI(updatedEnv, manifest);
+          const content = generateAIEnvContent(filtered);
+          await write(getAIEnvFilename(), content);
+
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({
+                  success: true,
+                  key,
+                  message: `Successfully set ${key}. Value is not shown due to access level.`,
+                  access: config.access,
+                }, null, 2),
               },
             ],
           };
