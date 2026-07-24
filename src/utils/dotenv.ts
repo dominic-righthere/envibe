@@ -144,7 +144,8 @@ export async function updateEnvVariable(
   const keyPattern = new RegExp(`^${escapeRegex(key)}\\s*=`);
 
   for (let i = 0; i < lines.length; i++) {
-    if (keyPattern.test(lines[i].trim())) {
+    const line = lines[i];
+    if (line !== undefined && keyPattern.test(line.trim())) {
       // Update existing line
       const needsQuotes =
         value.includes(" ") ||

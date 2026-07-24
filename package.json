@@ -1,10 +1,12 @@
 {
   "name": "envibe",
-  "version": "0.2.6",
+  "version": "0.3.0",
+  "mcpName": "io.github.dominic-righthere/envibe",
   "description": "The missing permission layer between AI agents and your .env",
   "type": "module",
   "bin": {
-    "envibe": "dist/cli/index.js"
+    "envibe": "dist/cli/index.js",
+    "envibe-mcp": "dist/mcp/bin.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,10 +18,11 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "bun build ./src/cli/index.ts --outdir ./dist/cli --target node && bun build ./src/index.ts --outdir ./dist --target node",
+    "build": "bun build ./src/cli/index.ts --outdir ./dist/cli --target node && bun build ./src/mcp/bin.ts --outdir ./dist/mcp --target node && bun build ./src/index.ts --outdir ./dist --target node && tsc -p tsconfig.build.json",
     "dev": "bun run ./src/cli/index.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",

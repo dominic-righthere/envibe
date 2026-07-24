@@ -10,6 +10,7 @@ import {
   type Manifest,
   type VariableConfig,
   AccessLevel,
+  REQUIRED_GITIGNORE_PATTERNS,
 } from "../../core";
 import { classifyVariables } from "../../core/patterns";
 import { loadEnvFile, getAIEnvFilename, envFileExists } from "../../utils/dotenv";
@@ -31,14 +32,7 @@ const EXAMPLE_FILES = [
 // Patterns to add to .gitignore
 const GITIGNORE_PATTERNS = [
   "# envibe - environment files with secrets",
-  ".env",
-  ".env.local",
-  ".env.development",
-  ".env.production",
-  ".env.staging",
-  ".env.*.local",
-  ".env.secrets",
-  ".env.keys",
+  ...REQUIRED_GITIGNORE_PATTERNS,
   "",
   "# envibe - generated AI-safe view (regenerated)",
   ".env.ai",
@@ -144,7 +138,10 @@ async function classifyVariablesInteractive(
   console.log("  (Press Enter to accept suggested level, or choose a different one)");
 
   for (const varName of varNames) {
-    const suggestedConfig = autoClassified[varName];
+    const suggestedConfig = autoClassified[varName] ?? {
+      access: AccessLevel.PLACEHOLDER,
+      description: "Unclassified variable",
+    };
     const accessLevel = await promptAccessLevel(varName, suggestedConfig.access);
 
     result[varName] = {
@@ -250,13 +247,15 @@ export const setupCommand = new Command("setup")
     console.log("  4. AI will read .env.ai and use MCP tools (secrets protected)");
   });
 
-async function configureGitignore(): Promise<void> {
+export async function configureGitignore(): Promise<void> {
   const gitignoreFile = createFile(GITIGNORE_FILE);
   let content = "";
 
   if (await gitignoreFile.exists()) {
     content = await gitignoreFile.text();
   }
+
+  const existingLines = new Set(content.split("\n").map((line) => line.trim()));
 
   // Check which patterns need to be added
   const linesToAdd: string[] = [];
@@ -267,7 +266,7 @@ async function configureGitignore(): Promise<void> {
       continue;
     }
     // Check if pattern already exists
-    if (!content.includes(pattern)) {
+    if (!existingLines.has(pattern)) {
       linesToAdd.push(pattern);
     }
   }
@@ -288,4 +287,3 @@ async function configureGitignore(): Promise<void> {
   await write(GITIGNORE_FILE, newContent);
   console.log(`     Added ${newPatterns.length} patterns`);
 }
-

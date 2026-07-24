@@ -7,6 +7,7 @@ import { readdir, mkdir } from "node:fs/promises";
 
 const CLAUDE_DIR = ".claude";
 const CLAUDE_SETTINGS_FILE = ".claude/settings.json";
+const MCP_CONFIG_FILE = ".mcp.json";
 
 // Safe .env files that should NOT be denied (AI can read these)
 const SAFE_ENV_FILES = [
@@ -54,6 +55,11 @@ interface ClaudeSettings {
     deny?: string[];
     allow?: string[];
   };
+  mcpServers?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface McpConfig {
   mcpServers?: Record<string, unknown>;
   [key: string]: unknown;
 }
@@ -168,19 +174,31 @@ export async function configureClaudeSettings(silent = false): Promise<Configure
     }
   }
 
-  // Add MCP server config
-  if (!settings.mcpServers) {
-    settings.mcpServers = {};
+  if (settings.mcpServers && "envibe" in settings.mcpServers) {
+    delete settings.mcpServers.envibe;
+    if (Object.keys(settings.mcpServers).length === 0) {
+      delete settings.mcpServers;
+    }
   }
 
-  const mcpConfigured = "envibe" in settings.mcpServers;
-  settings.mcpServers.envibe = {
+  const mcpFile = createFile(MCP_CONFIG_FILE);
+  let mcpConfig: McpConfig = {};
+  if (await mcpFile.exists()) {
+    try {
+      mcpConfig = JSON.parse(await mcpFile.text());
+    } catch {
+      if (!silent) console.log("     Warning: Could not parse .mcp.json, creating new...");
+    }
+  }
+  if (!mcpConfig.mcpServers) mcpConfig.mcpServers = {};
+  const mcpConfigured = "envibe" in mcpConfig.mcpServers;
+  mcpConfig.mcpServers.envibe = {
     command: "npx",
     args: ["envibe", "mcp"],
   };
 
-  // Write settings
   await write(CLAUDE_SETTINGS_FILE, JSON.stringify(settings, null, 2) + "\n");
+  await write(MCP_CONFIG_FILE, JSON.stringify(mcpConfig, null, 2) + "\n");
 
   // Report what was done (if not silent)
   if (!silent) {

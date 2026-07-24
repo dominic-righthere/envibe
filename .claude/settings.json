@@ -25,14 +25,5 @@
       "Read(./.env.manifest.yaml)",
       "Read(./.env.example)"
     ]
-  },
-  "mcpServers": {
-    "envibe": {
-      "command": "npx",
-      "args": [
-        "envibe",
-        "mcp"
-      ]
-    }
   }
 }

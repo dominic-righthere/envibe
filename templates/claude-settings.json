@@ -18,12 +18,5 @@
       "Read(./.env.manifest.yaml)",
       "Read(./.env.example)"
     ]
-  },
-  "mcpServers": {
-    "aienv": {
-      "command": "aienv",
-      "args": ["mcp"],
-      "description": "Granular access control for environment variables"
-    }
   }
 }
