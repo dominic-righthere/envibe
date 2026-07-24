@@ -45,6 +45,10 @@ export interface Manifest {
   version: number;
   /** Variable configurations keyed by variable name */
   variables: Record<string, VariableConfig>;
+  /** Local snapshot behavior. Encryption defaults to true. */
+  backup?: { encrypt?: boolean };
+  /** Reserved external secret-provider configuration. */
+  provider?: { type: string; config?: Record<string, unknown> };
 }
 
 /**

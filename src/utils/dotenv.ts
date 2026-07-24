@@ -1,8 +1,32 @@
 import type { ParsedEnv } from "../core/types";
+import { createSnapshot } from "../core/backup";
+import { loadManifest } from "../core/manifest";
+import { basename, dirname, resolve } from "node:path";
 import { createFile, write } from "./file";
 
 const ENV_FILENAME = ".env";
 const ENV_AI_FILENAME = ".env.ai";
+
+export interface BackupWriteOptions {
+  enabled?: boolean;
+  reason?: string;
+}
+
+async function backupBeforeWrite(path: string, options: BackupWriteOptions): Promise<void> {
+  if (options.enabled === false || basename(path) === ENV_AI_FILENAME) return;
+  const absolutePath = resolve(path);
+  let encrypt = true;
+  try {
+    encrypt = (await loadManifest(dirname(absolutePath))).backup?.encrypt !== false;
+  } catch {
+    // A missing manifest must not disable safe encrypted backups.
+  }
+  await createSnapshot(options.reason ?? `write-${basename(path)}`, {
+    projectDir: dirname(absolutePath),
+    envPath: absolutePath,
+    encrypt,
+  });
+}
 
 /**
  * Parse .env file content into key-value pairs
@@ -117,8 +141,10 @@ export async function loadEnvFile(
  */
 export async function saveEnvFile(
   env: Record<string, string>,
-  path: string = ENV_FILENAME
+  path: string = ENV_FILENAME,
+  backup: BackupWriteOptions = {},
 ): Promise<void> {
+  await backupBeforeWrite(path, backup);
   const content = serializeEnv(env);
   await write(path, content);
 }
@@ -130,8 +156,10 @@ export async function saveEnvFile(
 export async function updateEnvVariable(
   key: string,
   value: string,
-  path: string = ENV_FILENAME
+  path: string = ENV_FILENAME,
+  backup: BackupWriteOptions = {},
 ): Promise<void> {
+  await backupBeforeWrite(path, backup);
   const file = createFile(path);
   let content = "";
 

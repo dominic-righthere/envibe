@@ -8,6 +8,8 @@ import { setCommand } from "./commands/set";
 import { validateCommand } from "./commands/validate";
 import { setupCommand } from "./commands/setup";
 import { mcpCommand } from "./commands/mcp";
+import { backupCommand } from "./commands/backup";
+import { restoreCommand } from "./commands/restore";
 import pkg from "../../package.json";
 
 const program = new Command();
@@ -24,6 +26,8 @@ program.addCommand(viewCommand);
 program.addCommand(setCommand);
 program.addCommand(validateCommand);
 program.addCommand(mcpCommand);
+program.addCommand(backupCommand);
+program.addCommand(restoreCommand);
 
 if (process.argv.length <= 2) {
   program.help();

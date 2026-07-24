@@ -3,6 +3,7 @@ export const REQUIRED_GITIGNORE_PATTERNS = [
   ".env.*",
   "!.env.example",
   "!.env.manifest.yaml",
+  ".envibe/",
 ] as const;
 
 export interface GitignoreCheckResult {

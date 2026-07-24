@@ -25,6 +25,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # aienv generated files (project-specific, not for the repo itself)
 .env.ai
 .env.manifest.yaml
+.envibe/
 
 # caches
 .eslintcache

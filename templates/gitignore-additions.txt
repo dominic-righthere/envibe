@@ -5,6 +5,7 @@
 .env.*
 !.env.example
 !.env.manifest.yaml
+.envibe/
 
 # AI-generated view (regenerated, no need to commit)
 .env.ai

@@ -44,6 +44,11 @@ On first use, envibe automatically:
 1. Creates `.env.manifest.yaml` from your `.env.example`
 2. Generates `.env.ai` (filtered view for AI)
 3. Blocks direct `.env` file access
+4. Creates an encrypted, deduplicated `.env` snapshot
+
+Snapshots live in `.envibe/backups/` and are encrypted by default with a
+machine-local key at `~/.envibe/key`. Back up that key separately: encrypted
+snapshots cannot be recovered if it is lost.
 
 ## How It Works
 
@@ -105,6 +110,14 @@ variables:
 | `envibe generate` | Regenerate `.env.ai` |
 | `envibe view` | Display variables with access levels |
 | `envibe mcp` | Start MCP server |
+| `envibe backup list` | List snapshot metadata (never contents) |
+| `envibe backup create --reason <reason>` | Create a deduplicated snapshot |
+| `envibe backup prune --keep 20 --max-age-days 30` | Apply retention |
+| `envibe restore <id\|index\|latest> --dry-run` | Preview a masked key-level diff |
+| `envibe restore <id\|index\|latest> --yes` | Restore after creating a safety snapshot |
+
+Encryption is on by default. Local plaintext snapshots can be explicitly
+enabled in `.env.manifest.yaml` with `backup: { encrypt: false }`.
 
 ## Installation
 
@@ -217,6 +230,11 @@ envibe setup
 | `env_set` | Set a variable (only `full` access) |
 | `env_describe` | Get detailed info including format and example |
 | `env_check_required` | Check which required variables are missing |
+| `env_blind_set` | Set protected writable variables without reading them |
+| `env_check_gitignore` | Validate secret and backup exclusions |
+| `env_backup_list` | List snapshot metadata without contents |
+| `env_backup_diff` | Compare an explicit snapshot id with masked values |
+| `env_restore` | Restore an explicit snapshot id and report changed key names |
 
 ### v0.2.0 Features
 
@@ -241,6 +259,7 @@ your-project/
 ├── .env.example          # Template for devs (committed)
 ├── .env.manifest.yaml    # Access rules (committed)
 ├── .env.ai               # AI-safe view (gitignored)
+├── .envibe/              # Encrypted local snapshots (gitignored + agent-denied)
 └── .claude/
     └── settings.json     # Claude Code config (committed)
 ```
@@ -252,6 +271,8 @@ your-project/
 - `.env.ai` is **regenerated** from `.env` + manifest—gitignore it
 - Unknown variables default to `placeholder` (fail-safe)
 - Bash workarounds blocked (`cat .env`, `head .env`, etc.)
+- `.envibe/` is self-ignoring and denied to agents; snapshot files use mode `0600`
+- Restore always preserves the current state as a safety snapshot first
 
 ## License
 

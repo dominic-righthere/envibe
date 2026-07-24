@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { loadManifest, filterForAI, generateAIEnvContent } from "../../core";
+import { loadManifest, filterForAI, generateAIEnvContent, createSnapshot } from "../../core";
 import { loadEnvFile, getAIEnvFilename } from "../../utils/dotenv";
 import { write } from "../../utils/file";
 
@@ -11,6 +11,7 @@ export const generateCommand = new Command("generate")
   .action(async (options) => {
     try {
       const manifest = await loadManifest();
+      await createSnapshot("cli-generate-session-start", { envPath: options.env, encrypt: manifest.backup?.encrypt !== false });
       const { variables: env } = await loadEnvFile(options.env);
       const filtered = filterForAI(env, manifest);
       const content = generateAIEnvContent(filtered);

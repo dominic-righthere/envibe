@@ -1,10 +1,34 @@
-import { test, expect, describe } from "bun:test";
+import { afterEach, beforeEach, test, expect, describe } from "bun:test";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   parseEnvContent,
   serializeEnv,
   getEnvFilename,
   getAIEnvFilename,
+  saveEnvFile,
+  updateEnvVariable,
 } from "./dotenv";
+
+let originalCwd: string;
+let fixtureDir: string;
+let originalKeyPath: string | undefined;
+
+beforeEach(async () => {
+  originalCwd = process.cwd();
+  fixtureDir = await mkdtemp(join(tmpdir(), "envibe-dotenv-"));
+  process.chdir(fixtureDir);
+  originalKeyPath = process.env.ENVIBE_KEY_PATH;
+  process.env.ENVIBE_KEY_PATH = join(fixtureDir, "machine", "key");
+});
+
+afterEach(async () => {
+  process.chdir(originalCwd);
+  if (originalKeyPath === undefined) delete process.env.ENVIBE_KEY_PATH;
+  else process.env.ENVIBE_KEY_PATH = originalKeyPath;
+  await rm(fixtureDir, { recursive: true, force: true });
+});
 
 describe("parseEnvContent", () => {
   test("parses simple key=value pairs", () => {
@@ -230,5 +254,25 @@ describe("getEnvFilename", () => {
 describe("getAIEnvFilename", () => {
   test("returns .env.ai", () => {
     expect(getAIEnvFilename()).toBe(".env.ai");
+  });
+});
+
+describe("primitive mutation backups", () => {
+  test("updateEnvVariable snapshots .env by default with a reason", async () => {
+    await writeFile(".env", "KEY=before\n");
+    await updateEnvVariable("KEY", "after", ".env", { reason: "unit-update-key" });
+    const backups = await readdir(".envibe/backups");
+    expect(backups).toHaveLength(1);
+    expect(backups[0]).toContain("unit-update-key");
+    expect(await readFile(".env", "utf8")).toContain("KEY=after");
+  });
+
+  test("saveEnvFile snapshots .env but never snapshots derived .env.ai", async () => {
+    await writeFile(".env", "KEY=before\n");
+    await saveEnvFile({ KEY: "after" }, ".env", { reason: "unit-save" });
+    await saveEnvFile({ KEY: "safe" }, ".env.ai", { reason: "derived" });
+    const backups = await readdir(".envibe/backups");
+    expect(backups).toHaveLength(1);
+    expect(backups[0]).toContain("unit-save");
   });
 });

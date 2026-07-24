@@ -12,3 +12,7 @@ export * from "./filter";
 
 // Gitignore protection
 export * from "./gitignore";
+
+// Backup/restore and reserved provider contracts
+export * from "./backup";
+export * from "./providers";

@@ -11,6 +11,7 @@ import {
   type VariableConfig,
   AccessLevel,
   REQUIRED_GITIGNORE_PATTERNS,
+  createSnapshot,
 } from "../../core";
 import { classifyVariables } from "../../core/patterns";
 import { loadEnvFile, getAIEnvFilename, envFileExists } from "../../utils/dotenv";
@@ -207,6 +208,10 @@ export const setupCommand = new Command("setup")
         console.log("     Edit .env.manifest.yaml to match your actual variables");
       }
     }
+
+    await createSnapshot("cli-setup-session-start", {
+      encrypt: manifest.backup?.encrypt !== false,
+    });
 
     // Step 2: Generate .env.ai
     console.log(`[2/4] Generating ${getAIEnvFilename()}...`);

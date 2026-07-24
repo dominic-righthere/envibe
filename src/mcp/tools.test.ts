@@ -10,6 +10,7 @@ import { configureClaudeSettings } from "../utils/claude-settings";
 
 let fixtureDir: string;
 let originalCwd: string;
+let originalKeyPath: string | undefined;
 
 function body(result: Awaited<ReturnType<typeof callTool>>) {
   const content = result.content[0];
@@ -46,7 +47,7 @@ variables:
   );
   await writeFile(
     ".gitignore",
-    ".env\n.env.*\n!.env.example\n!.env.manifest.yaml\n",
+    ".env\n.env.*\n!.env.example\n!.env.manifest.yaml\n.envibe/\n",
   );
 }
 
@@ -54,15 +55,19 @@ beforeEach(async () => {
   originalCwd = process.cwd();
   fixtureDir = await mkdtemp(join(tmpdir(), "envibe-tools-"));
   process.chdir(fixtureDir);
+  originalKeyPath = process.env.ENVIBE_KEY_PATH;
+  process.env.ENVIBE_KEY_PATH = join(fixtureDir, "machine", "key");
 });
 
 afterEach(async () => {
   process.chdir(originalCwd);
+  if (originalKeyPath === undefined) delete process.env.ENVIBE_KEY_PATH;
+  else process.env.ENVIBE_KEY_PATH = originalKeyPath;
   await rm(fixtureDir, { recursive: true, force: true });
 });
 
 describe("real MCP tool handlers", () => {
-  test("exports all seven tools", () => {
+  test("exports all ten tools", () => {
     expect(TOOL_DEFINITIONS.map((tool) => tool.name)).toEqual([
       "env_list",
       "env_get",
@@ -71,6 +76,9 @@ describe("real MCP tool handlers", () => {
       "env_check_required",
       "env_blind_set",
       "env_check_gitignore",
+      "env_backup_list",
+      "env_backup_diff",
+      "env_restore",
     ]);
   });
 
@@ -155,7 +163,7 @@ describe("real MCP tool handlers", () => {
 
     await writeFile(
       ".gitignore",
-      ".env\n.env.*\n!.env.example\n!.env.manifest.yaml\n.env.ai\n",
+      ".env\n.env.*\n!.env.example\n!.env.manifest.yaml\n.envibe/\n.env.ai\n",
     );
     const superset = jsonBody(await callTool("env_check_gitignore"));
     expect(superset.valid).toBe(true);
@@ -170,6 +178,32 @@ describe("real MCP tool handlers", () => {
     expect(jsonBody(result).issues).toContain(
       "Missing '!.env.manifest.yaml' pattern",
     );
+  });
+
+  test("backup tools list metadata, mask diffs, and restore only explicit ids", async () => {
+    await writeFixture();
+    await callTool("env_backup_list");
+    await writeFile(".env", "PUBLIC_VALUE=changed\nREAD_ONLY_VALUE=fixed\nPLACEHOLDER_VALUE=replacement-secret\nHIDDEN_VALUE=new-hidden\n");
+    const listed = jsonBody(await callTool("env_backup_list"));
+    expect(listed).toHaveLength(2);
+    expect(JSON.stringify(listed)).not.toContain("secret-hidden");
+
+    const originalId = listed[1].id;
+    const diff = await callTool("env_backup_diff", { id: originalId });
+    expect(body(diff)).toContain("PUBLIC_VALUE");
+    expect(body(diff)).not.toContain("replacement-secret");
+    expect(body(diff)).not.toContain("new-hidden");
+
+    const latest = await callTool("env_restore", { id: "latest" });
+    expect(latest.isError).toBe(true);
+    expect(jsonBody(latest).error).toBe("EXPLICIT_ID_REQUIRED");
+
+    const restored = jsonBody(await callTool("env_restore", { id: originalId }));
+    expect(restored.changedKeys).toContain("PUBLIC_VALUE");
+    expect(JSON.stringify(restored)).not.toContain("secret-hidden");
+    expect(await readFile(".env", "utf8")).toContain("PUBLIC_VALUE=visible");
+    expect(await readFile(".env.ai", "utf8")).not.toContain("secret-hidden");
+    expect(restored.safetySnapshotId).toBeTruthy();
   });
 });
 
@@ -196,6 +230,7 @@ describe("MCP resources and setup", () => {
       ".env.*",
       "!.env.example",
       "!.env.manifest.yaml",
+      ".envibe/",
     ]) {
       expect(gitignore.split("\n")).toContain(pattern);
     }
@@ -218,6 +253,7 @@ describe("MCP resources and setup", () => {
     await configureClaudeSettings(true);
 
     const settings = JSON.parse(await readFile(".claude/settings.json", "utf8"));
+    expect(settings.permissions.deny).toContain("Read(./.envibe/**)");
     expect(settings.theme).toBe("dark");
     expect(settings.mcpServers.other).toEqual({ command: "other" });
     expect(settings.mcpServers.envibe).toBeUndefined();

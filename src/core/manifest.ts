@@ -66,7 +66,22 @@ export function parseManifest(content: string): Manifest {
     }
   }
 
-  return { version, variables };
+  if (parsed.backup?.encrypt !== undefined && typeof parsed.backup.encrypt !== "boolean") {
+    throw new Error("Invalid manifest: backup.encrypt must be a boolean");
+  }
+  const backup = parsed.backup && typeof parsed.backup === "object"
+    ? { encrypt: parsed.backup.encrypt as boolean | undefined }
+    : undefined;
+  const provider = parsed.provider && typeof parsed.provider === "object" && typeof parsed.provider.type === "string"
+    ? {
+        type: parsed.provider.type,
+        config: parsed.provider.config && typeof parsed.provider.config === "object"
+          ? parsed.provider.config as Record<string, unknown>
+          : undefined,
+      }
+    : undefined;
+
+  return { version, variables, ...(backup ? { backup } : {}), ...(provider ? { provider } : {}) };
 }
 
 /**
@@ -75,6 +90,8 @@ export function parseManifest(content: string): Manifest {
 export function serializeManifest(manifest: Manifest): string {
   const doc = new YAML.Document({
     version: manifest.version,
+    ...(manifest.backup ? { backup: manifest.backup } : {}),
+    ...(manifest.provider ? { provider: manifest.provider } : {}),
     variables: manifest.variables,
   });
 

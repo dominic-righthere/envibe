@@ -87,6 +87,30 @@ variables:
     });
   });
 
+  test("round-trips backup and reserved provider configuration", () => {
+    const manifest = parseManifest(`
+version: 1
+backup:
+  encrypt: false
+provider:
+  type: future-vault
+  config:
+    namespace: development
+variables: {}
+`);
+    expect(manifest.backup).toEqual({ encrypt: false });
+    expect(manifest.provider).toEqual({
+      type: "future-vault",
+      config: { namespace: "development" },
+    });
+    expect(parseManifest(serializeManifest(manifest))).toEqual(manifest);
+  });
+
+  test("rejects non-boolean backup encryption configuration", () => {
+    expect(() => parseManifest("version: 1\nbackup:\n  encrypt: nope\nvariables: {}\n"))
+      .toThrow("backup.encrypt must be a boolean");
+  });
+
   test("defaults version to 1 when missing", () => {
     const yaml = `
 variables:
