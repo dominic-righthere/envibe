@@ -7,6 +7,9 @@
       "Edit(./.env.*)",
       "Write(./.env)",
       "Write(./.env.*)",
+      "Read(./.envibe/**)",
+      "Edit(./.envibe/**)",
+      "Write(./.envibe/**)",
       "Bash(cat .env:*)",
       "Bash(cat ./.env:*)",
       "Bash(head .env:*)",
@@ -18,7 +21,14 @@
       "Bash(more .env:*)",
       "Bash(more ./.env:*)",
       "Bash(grep .env:*)",
-      "Bash(grep ./.env:*)"
+      "Bash(grep ./.env:*)",
+      "Bash(cat .envibe/:*)",
+      "Bash(cat ./.envibe/:*)",
+      "Bash(head .envibe/:*)",
+      "Bash(tail .envibe/:*)",
+      "Bash(less .envibe/:*)",
+      "Bash(more .envibe/:*)",
+      "Bash(grep .envibe/:*)"
     ],
     "allow": [
       "Read(./.env.ai)",

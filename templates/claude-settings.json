@@ -11,7 +11,14 @@
       "Edit(./.env)",
       "Edit(./.env.*)",
       "Write(./.env)",
-      "Write(./.env.*)"
+      "Write(./.env.*)",
+      "Read(./.envibe/**)",
+      "Edit(./.envibe/**)",
+      "Write(./.envibe/**)",
+      "Bash(cat .envibe/:*)",
+      "Bash(cat ./.envibe/:*)",
+      "Bash(head .envibe/:*)",
+      "Bash(tail .envibe/:*)"
     ],
     "allow": [
       "Read(./.env.ai)",

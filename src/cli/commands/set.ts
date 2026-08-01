@@ -39,7 +39,7 @@ export const setCommand = new Command("set")
       }
 
       // Update the .env file
-      await updateEnvVariable(key, value, options.env);
+      await updateEnvVariable(key, value, options.env, { reason: `cli-set-${key}` });
       console.log(`Set ${key}=${value}`);
 
       // Optionally update .env.ai

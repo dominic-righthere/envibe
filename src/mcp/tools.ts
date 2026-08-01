@@ -6,6 +6,9 @@ import {
   getVariableForAI,
   validateModification,
   type Manifest,
+  LocalSnapshotStore,
+  diffSnapshot,
+  restoreSnapshot,
 } from "../core";
 import {
   getAIEnvFilename,
@@ -110,6 +113,29 @@ export const TOOL_DEFINITIONS = [
       "Validate that .gitignore protects .env files while keeping .env.example and .env.manifest.yaml committable.",
     inputSchema: { type: "object" as const, properties: {} },
   },
+  {
+    name: "env_backup_list",
+    description: "List encrypted .env snapshot metadata. Snapshot contents are never returned.",
+    inputSchema: { type: "object" as const, properties: {} },
+  },
+  {
+    name: "env_backup_diff",
+    description: "Compare a snapshot with the current .env at key level using manifest-safe masked values.",
+    inputSchema: {
+      type: "object" as const,
+      properties: { id: { type: "string", description: "Explicit snapshot id from env_backup_list" } },
+      required: ["id"],
+    },
+  },
+  {
+    name: "env_restore",
+    description: "Restore an explicit snapshot id after creating a mandatory safety snapshot.",
+    inputSchema: {
+      type: "object" as const,
+      properties: { id: { type: "string", description: "Explicit snapshot id; latest and indexes are not accepted" } },
+      required: ["id"],
+    },
+  },
 ] as const;
 
 export async function handleEnvList(manifest: Manifest): Promise<ToolResult> {
@@ -175,7 +201,7 @@ export async function handleEnvSet(
   if (!validation.allowed) {
     return textResult(`Error: ${validation.reason}`, true);
   }
-  await updateEnvVariable(key, value);
+  await updateEnvVariable(key, value, ".env", { reason: `mcp-env-set-${key}` });
   await regenerateAIEnv(manifest);
   return textResult(`Successfully set ${key}=${value}`);
 }
@@ -280,7 +306,7 @@ export async function handleEnvBlindSet(
       true,
     );
   }
-  await updateEnvVariable(key, value);
+  await updateEnvVariable(key, value, ".env", { reason: `mcp-env-blind-set-${key}` });
   await regenerateAIEnv(manifest);
   return jsonResult({
     success: true,
@@ -318,6 +344,34 @@ export async function handleEnvCheckGitignore(): Promise<ToolResult> {
   );
 }
 
+function snapshotStore(manifest: Manifest): LocalSnapshotStore {
+  return new LocalSnapshotStore({ encrypt: manifest.backup?.encrypt !== false });
+}
+
+export async function handleEnvBackupList(manifest: Manifest): Promise<ToolResult> {
+  return jsonResult(await snapshotStore(manifest).list());
+}
+
+export async function handleEnvBackupDiff(manifest: Manifest, args: ToolArgs): Promise<ToolResult> {
+  const id = stringArg(args, "id");
+  return jsonResult({ id, changes: await diffSnapshot(snapshotStore(manifest), id, manifest) });
+}
+
+export async function handleEnvRestore(manifest: Manifest, args: ToolArgs): Promise<ToolResult> {
+  const id = stringArg(args, "id");
+  if (id === "latest" || /^\d+$/.test(id)) {
+    return jsonResult({ error: "EXPLICIT_ID_REQUIRED", message: "Call env_backup_list and env_backup_diff, then provide the full snapshot id." }, true);
+  }
+  const store = snapshotStore(manifest);
+  const result = await restoreSnapshot(store, id);
+  await regenerateAIEnv(manifest);
+  return jsonResult({
+    restored: id,
+    safetySnapshotId: result.safetySnapshot?.id ?? null,
+    changedKeys: result.changedKeys,
+  });
+}
+
 export async function callTool(name: string, args?: ToolArgs): Promise<ToolResult> {
   try {
     const manifest = await ensureSetup();
@@ -336,6 +390,12 @@ export async function callTool(name: string, args?: ToolArgs): Promise<ToolResul
         return handleEnvBlindSet(manifest, args);
       case "env_check_gitignore":
         return handleEnvCheckGitignore();
+      case "env_backup_list":
+        return handleEnvBackupList(manifest);
+      case "env_backup_diff":
+        return handleEnvBackupDiff(manifest, args);
+      case "env_restore":
+        return handleEnvRestore(manifest, args);
       default:
         return textResult(`Unknown tool: ${name}`, true);
     }

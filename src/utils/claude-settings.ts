@@ -20,6 +20,9 @@ const SAFE_ENV_FILES = [
 
 // Base permissions to add to Claude settings (static rules)
 const DENY_RULES = [
+  "Read(./.envibe/**)",
+  "Edit(./.envibe/**)",
+  "Write(./.envibe/**)",
   // File tool blocks (gitignore-style patterns)
   "Read(./.env)",
   "Read(./.env.*)",
@@ -42,6 +45,13 @@ const DENY_RULES = [
   "Bash(more ./.env:*)",
   "Bash(grep .env:*)",
   "Bash(grep ./.env:*)",
+  "Bash(cat .envibe/:*)",
+  "Bash(cat ./.envibe/:*)",
+  "Bash(head .envibe/:*)",
+  "Bash(tail .envibe/:*)",
+  "Bash(less .envibe/:*)",
+  "Bash(more .envibe/:*)",
+  "Bash(grep .envibe/:*)",
 ];
 
 const ALLOW_RULES = [

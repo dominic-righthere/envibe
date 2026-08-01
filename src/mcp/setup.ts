@@ -6,6 +6,7 @@ import {
   loadManifest,
   saveManifest,
   type Manifest,
+  createSnapshot,
 } from "../core";
 import { classifyVariables } from "../core/patterns";
 import { configureClaudeSettings } from "../utils/claude-settings";
@@ -47,7 +48,9 @@ export const FALLBACK_MANIFEST: Manifest = {
 export async function ensureSetup(): Promise<Manifest> {
   const manifestFile = createFile(getManifestFilename());
   if (await manifestFile.exists()) {
-    return loadManifest();
+    const manifest = await loadManifest();
+    await createSnapshot("mcp-session-start", { encrypt: manifest.backup?.encrypt !== false });
+    return manifest;
   }
 
   let sourceFile: string | null = null;
@@ -83,6 +86,7 @@ export async function ensureSetup(): Promise<Manifest> {
     generateAIEnvContent(filterForAI(env, manifest)),
   );
   await configureClaudeSettings(true);
+  await createSnapshot("mcp-session-start", { encrypt: manifest.backup?.encrypt !== false });
 
   return manifest;
 }
