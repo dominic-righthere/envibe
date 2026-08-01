@@ -1,0 +1,57 @@
+name: Publish npm and MCP registry
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify release versions
+        run: |
+          PACKAGE_VERSION="$(bun -e 'console.log(require("./package.json").version)')"
+          SERVER_VERSION="$(bun -e 'console.log(require("./server.json").version)')"
+          PACKAGE_REF_VERSION="$(bun -e 'console.log(require("./server.json").packages[0].version)')"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          test "$PACKAGE_VERSION" = "$SERVER_VERSION"
+          test "$PACKAGE_VERSION" = "$PACKAGE_REF_VERSION"
+          test "$PACKAGE_VERSION" = "$TAG_VERSION"
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun test
+
+      - name: Build
+        run: bun run build
+
+      - name: Publish to npm
+        run: bun publish
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install MCP publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+
+      - name: Authenticate to MCP registry
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP registry
+        run: ./mcp-publisher publish

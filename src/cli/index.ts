@@ -8,13 +8,14 @@ import { setCommand } from "./commands/set";
 import { validateCommand } from "./commands/validate";
 import { setupCommand } from "./commands/setup";
 import { mcpCommand } from "./commands/mcp";
+import pkg from "../../package.json";
 
 const program = new Command();
 
 program
   .name("envibe")
   .description("The missing permission layer between AI agents and your .env")
-  .version("0.1.0");
+  .version(pkg.version);
 
 program.addCommand(setupCommand);
 program.addCommand(initCommand);
@@ -24,4 +25,8 @@ program.addCommand(setCommand);
 program.addCommand(validateCommand);
 program.addCommand(mcpCommand);
 
-program.parse();
+if (process.argv.length <= 2) {
+  program.help();
+} else {
+  program.parse();
+}

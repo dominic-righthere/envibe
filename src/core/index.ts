@@ -9,3 +9,6 @@ export * from "./patterns";
 
 // Access control filtering
 export * from "./filter";
+
+// Gitignore protection
+export * from "./gitignore";

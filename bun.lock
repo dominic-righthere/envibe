@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "aienv",
+      "name": "envibe",
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.0.0",
         "commander": "^13.0.0",

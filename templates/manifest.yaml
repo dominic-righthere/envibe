@@ -1,5 +1,5 @@
-# aienv manifest - AI access control for environment variables
-# See: https://github.com/your-repo/aienv
+# envibe manifest - AI access control for environment variables
+# See: https://github.com/dominic-righthere/envibe
 #
 # Access levels:
 #   full        - AI can see and modify the value

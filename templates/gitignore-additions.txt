@@ -1,14 +1,10 @@
-# aienv - Add these to your .gitignore
+# envibe - Add these to your .gitignore
 
 # Original .env files (contain secrets)
 .env
-.env.local
-.env.development
-.env.production
-.env.secrets
-
-# Decryption keys (if using dotenvx)
-.env.keys
+.env.*
+!.env.example
+!.env.manifest.yaml
 
 # AI-generated view (regenerated, no need to commit)
 .env.ai

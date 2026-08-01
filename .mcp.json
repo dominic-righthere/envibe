@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "envibe": {
+      "command": "npx",
+      "args": [
+        "envibe",
+        "mcp"
+      ]
+    }
+  }
+}
